@@ -15,6 +15,17 @@ namespace ProductWebApi.Services
         {
             _productContext = productContext;
         }
+
+        public async Task<bool> CategoryIdExists(Product product)
+        {
+            return await _productContext.Categories.AnyAsync(c => c.Id == product.CategoryId);
+        }
+
+        /*public async Task<bool> CategoryNameExists(Product product)
+        {
+            return await _productContext.Categories.AnyAsync(c => c.Id == product.Id);
+        }*/
+
         public async Task<bool> CreateCategory(Category category)
         {
             _productContext.Add(category);
@@ -34,13 +45,13 @@ namespace ProductWebApi.Services
 
         public Category GetCategory(int CategoryId)
         {
-            return _productContext.Categories.Where(c => c.CategoryId == CategoryId).FirstOrDefault();
+            return _productContext.Categories.Where(c => c.Id == CategoryId).FirstOrDefault();
         }
 
-        /*public ICollection<Category> GetProductsByCategoryName(string categoryName)
+        public async Task<ICollection<Product>> GetProductsByCategoryId(int CategoryId)
         {
-            var id = _productContext.Categories.Where(c => c.categoryName == categoryName)
-        }*/
+            return await _productContext.Products.Where(c => c.CategoryId == CategoryId).ToListAsync();
+        }
 
         public async Task<bool> Save()
         {

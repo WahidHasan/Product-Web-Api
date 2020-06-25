@@ -15,6 +15,12 @@ namespace ProductWebApi.Services
         {
             _productContext = productContext;
         }
+
+        public async Task<bool> CountryIdExists(Product product)
+        {
+            return await _productContext.Countries.AnyAsync(c => c.Id == product.CountryId);
+        }
+
         public async Task<bool> CreateCountry(Country country)
         {
             _productContext.Add(country);
@@ -32,9 +38,14 @@ namespace ProductWebApi.Services
             return await _productContext.Countries.ToListAsync();
         }
 
-        public Country GetCountry(int CountryId)
+        public Country GetCountry(int Id)
         {
-            return _productContext.Countries.Where(c => c.CountryId == CountryId).FirstOrDefault();
+            return _productContext.Countries.Where(c => c.Id == Id).FirstOrDefault();
+        }
+
+        public async Task<ICollection<Product>> GetProductsByCountryId(int Id)
+        {
+            return await _productContext.Products.Where(c => c.CountryId == Id).ToListAsync();
         }
 
         public async Task<bool> Save()

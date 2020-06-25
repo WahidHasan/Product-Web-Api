@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProductWebApi.Dtos;
 using ProductWebApi.Models;
 using ProductWebApi.Services;
 
@@ -27,12 +28,18 @@ namespace ProductWebApi.Controllers
         }
 
         //Get Country by Id
-        [HttpGet("{CountryId}", Name = "GetCountry")]
-        public IActionResult GetCountry(int CountryId)
+        [HttpGet("{Id}", Name = "GetCountry")]
+        public IActionResult GetCountry(int Id)
         {
             try
             {
-                return Ok(_countryRepository.GetCountry(CountryId));
+                var country = _countryRepository.GetCountry(Id);
+                var countryDto = new CountryDto()
+                {
+                    Id = country.Id,
+                    Name = country.Name
+                };
+                return Ok(countryDto);
             }
             catch (Exception E)
             {
@@ -47,7 +54,32 @@ namespace ProductWebApi.Controllers
         {
             try
             {
-                return Ok(await _countryRepository.GetCountries());
+                var countries = await _countryRepository.GetCountries();
+                var countriesDto = new List<CountryDto>();
+                foreach (var country in countries)
+                {
+                    countriesDto.Add(new CountryDto
+                    {
+                        Id = country.Id,
+                        Name = country.Name
+                    });
+                }
+                return Ok(countriesDto);
+            }
+            catch (Exception E)
+            {
+
+                return StatusCode(500, E.Message);
+            }
+        }
+
+        //Get Products by Country Id
+        [HttpGet("getProductsByCountryId/{Id}")]
+        public async Task<IActionResult> GetProductsByCountryId(int Id)
+        {
+            try
+            {
+                return Ok(await _countryRepository.GetProductsByCountryId(Id));
             }
             catch (Exception E)
             {
@@ -73,7 +105,7 @@ namespace ProductWebApi.Controllers
                     ModelState.AddModelError("", $"Something went wrong saving data");
                     return StatusCode(500, ModelState);
                 } */
-                return CreatedAtRoute("GetCountry", new Country { CountryId = toCreate.CountryId }, toCreate);
+                return CreatedAtRoute("GetCountry", new Country { Id = toCreate.Id }, toCreate);
             }
             catch (Exception E)
             {
@@ -82,13 +114,12 @@ namespace ProductWebApi.Controllers
             }
         }
 
-        //Delete Category
-        [HttpDelete("{CountryId}")]
+        //Delete Country
+        [HttpDelete("{Id}")]
 
-        public async Task<IActionResult> DeleteCountry([FromRoute] int CountryId)
+        public async Task<IActionResult> DeleteCountry([FromRoute] int Id)
         {
-            //var products = await _productDbContext.Products.Where(p => p.ProductId == ProductId).FirstOrDefaultAsync();
-            var countries = await _productDbContext.Countries.FindAsync(CountryId);
+            var countries = await _productDbContext.Countries.FindAsync(Id);
             
             if (countries != null)
             {
@@ -101,16 +132,16 @@ namespace ProductWebApi.Controllers
             }
         }
 
-        //Update Category
-        [HttpPut("{CountryId}")]
-        public async Task<IActionResult> UpdateCountry(int CountryId, [FromBody]Country toUpdate)
+        //Update Country
+        [HttpPut("{Id}")]
+        public async Task<IActionResult> UpdateCountry(int Id, [FromBody]Country toUpdate)
         {
             if (toUpdate == null)
             {
                 return BadRequest(ModelState);
             }
 
-            if (CountryId != toUpdate.CountryId)
+            if (Id != toUpdate.Id)
             {
                 return BadRequest(ModelState);
             }
@@ -120,9 +151,9 @@ namespace ProductWebApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var check = await _productDbContext.Countries.FirstOrDefaultAsync(c => c.CountryId.Equals(CountryId));
-            check.CountryId = toUpdate.CountryId;
-            check.countryName = toUpdate.countryName;
+            var check = await _productDbContext.Countries.FirstOrDefaultAsync(c => c.Id.Equals(Id));
+            check.Id = toUpdate.Id;
+            check.Name = toUpdate.Name;
 
             await _countryRepository.UpdateCountry(check);
 
@@ -134,5 +165,7 @@ namespace ProductWebApi.Controllers
 
             return NoContent();
         }
+
+
     }
 }

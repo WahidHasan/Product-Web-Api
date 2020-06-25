@@ -7,25 +7,37 @@ using System.Threading.Tasks;
 
 namespace ProductWebApi.Models
 {
+    [Table("Products")]
     public class Product
     {
 
         //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
-        public int ProductId { get; set; }
+        [Column("Id")]
+        public int Id { get; set; }
 
         [Required]
-        public string productName { get; set; }
+        [Column("Name")]
+        public string Name { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(8,2)")]
-        public decimal price { get; set; }
+        [Column("Price",TypeName = "decimal(8,2)")]
+        public decimal Price { get; set; }
 
+        
         public int? CategoryId { get; set; }
 
-
+        
         public int? CountryId { get; set; }
 
+        
+        [NotMapped]
+        //[Column("CategoryName")]
+        public string? CategoryName { get; set; }
+        [NotMapped]
+        //[Column("CountryName")]
+        public string? CountryName { get; set; }
+        
 
         public virtual Category Category { get; set; }      // each product has only one category
 

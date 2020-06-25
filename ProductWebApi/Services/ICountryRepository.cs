@@ -9,12 +9,13 @@ namespace ProductWebApi.Services
     public interface ICountryRepository
     {
         Task<ICollection<Country>> GetCountries();
-        Country GetCountry(int CountryId);
+        Country GetCountry(int Id);
 
-        //ICollection<Country> GetProductsByCountryId(int CountryId);
+        Task<ICollection<Product>> GetProductsByCountryId(int Id);
         Task<bool> CreateCountry(Country country);
         Task<bool> DeleteCountry(Country country);
         Task<bool> UpdateCountry(Country country);
+        Task<bool> CountryIdExists(Product product);
         Task<bool> Save();
     }
 }

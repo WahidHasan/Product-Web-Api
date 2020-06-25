@@ -24,44 +24,48 @@ namespace ProductWebApi.Services
             modelBuilder.Entity<Product>()
 
                 .HasOne(p => p.Category)
-                .WithMany(c => c.Products);      // from category point of view, one category has many products
+                .WithMany(c => c.Products)
+                .HasForeignKey(c => c.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);       // from category point of view, one category has many products
 
             modelBuilder.Entity<Product>()
             .HasOne(p => p.Country)
-            .WithMany(c => c.Products);      // from country point of view, one country has many products
+            .WithMany(c => c.Products)
+            .HasForeignKey(c => c.CountryId)
+            .OnDelete(DeleteBehavior.Cascade);       // from country point of view, one country has many products
 
-            modelBuilder.Entity<Category>().HasData(
-            new Category { CategoryId = 1, categoryName = "Food" },
-            new Category { CategoryId = 2, categoryName = "Cloth" },
-            new Category { CategoryId = 3, categoryName = "Medicine" }
+          /*  modelBuilder.Entity<Category>().HasData(
+            new Category { Id = 1, Name = "Food" },
+            new Category { Id = 2, Name = "Cloth" },
+            new Category { Id = 3, Name = "Medicine" }
         );
 
             modelBuilder.Entity<Country>().HasData(
-                new Country { CountryId = 1, countryName = "Bangladesh" },
-                new Country { CountryId = 2, countryName = "Pakistan" },
-                new Country { CountryId = 3, countryName = "Germany" }
+                new Country { Id = 1, Name = "Bangladesh" },
+                new Country { Id = 2, Name = "Pakistan" },
+                new Country { Id = 3, Name = "Germany" }
             );
 
             modelBuilder.Entity<Product>().HasData(
                 new Product
                 {
-                    ProductId = 1,
-                    productName = "Shirt",
-                    price = 30,
+                    Id = 1,
+                    Name = "Shirt",
+                    Price = 30,
                     CategoryId = 2,
                     CountryId = 1
 
                 },
                 new Product
                 {
-                    ProductId = 2,
-                    productName = "Juice",
-                    price = 20,
+                    Id = 2,
+                    Name = "Juice",
+                    Price = 20,
                     CategoryId = 1,
                     CountryId = 2
 
                 }
-            );
+            );*/
 
         
         }

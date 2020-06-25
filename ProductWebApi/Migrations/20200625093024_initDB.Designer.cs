@@ -10,8 +10,8 @@ using ProductWebApi.Services;
 namespace ProductWebApi.Migrations
 {
     [DbContext(typeof(ProductDbContext))]
-    [Migration("20200620202935_initial_Create")]
-    partial class initial_Create
+    [Migration("20200625093024_initDB")]
+    partial class initDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,74 +23,45 @@ namespace ProductWebApi.Migrations
 
             modelBuilder.Entity("ProductWebApi.Models.Category", b =>
                 {
-                    b.Property<int>("CategoryId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("Id")
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("categoryName")
+                    b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnName("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("CategoryId");
+                    b.HasKey("Id");
 
                     b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            CategoryId = 1,
-                            categoryName = "Food"
-                        },
-                        new
-                        {
-                            CategoryId = 2,
-                            categoryName = "Cloth"
-                        },
-                        new
-                        {
-                            CategoryId = 3,
-                            categoryName = "Medicine"
-                        });
                 });
 
             modelBuilder.Entity("ProductWebApi.Models.Country", b =>
                 {
-                    b.Property<int>("CountryId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("Id")
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("countryName")
+                    b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnName("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("CountryId");
+                    b.HasKey("Id");
 
                     b.ToTable("Countries");
-
-                    b.HasData(
-                        new
-                        {
-                            CountryId = 1,
-                            countryName = "Bangladesh"
-                        },
-                        new
-                        {
-                            CountryId = 2,
-                            countryName = "Pakistan"
-                        },
-                        new
-                        {
-                            CountryId = 3,
-                            countryName = "Germany"
-                        });
                 });
 
             modelBuilder.Entity("ProductWebApi.Models.Product", b =>
                 {
-                    b.Property<int>("ProductId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("Id")
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -100,49 +71,35 @@ namespace ProductWebApi.Migrations
                     b.Property<int?>("CountryId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("price")
-                        .HasColumnType("decimal(8,2)");
-
-                    b.Property<string>("productName")
+                    b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnName("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("ProductId");
+                    b.Property<decimal>("Price")
+                        .HasColumnName("Price")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("CountryId");
 
                     b.ToTable("Products");
-
-                    b.HasData(
-                        new
-                        {
-                            ProductId = 1,
-                            CategoryId = 2,
-                            CountryId = 1,
-                            price = 30m,
-                            productName = "Shirt"
-                        },
-                        new
-                        {
-                            ProductId = 2,
-                            CategoryId = 1,
-                            CountryId = 2,
-                            price = 20m,
-                            productName = "Juice"
-                        });
                 });
 
             modelBuilder.Entity("ProductWebApi.Models.Product", b =>
                 {
                     b.HasOne("ProductWebApi.Models.Category", "Category")
                         .WithMany("Products")
-                        .HasForeignKey("CategoryId");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ProductWebApi.Models.Country", "Country")
                         .WithMany("Products")
-                        .HasForeignKey("CountryId");
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

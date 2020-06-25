@@ -32,14 +32,14 @@ namespace ProductWebApi.Services
             return await _productContext.Products.ToListAsync();
         }
 
-        public Product GetProduct(int ProductId)
+        public async Task<Product> GetProduct(int ProductId)
         {
-           return  _productContext.Products.Where(p => p.ProductId == ProductId).FirstOrDefault();
+           return await _productContext.Products.Where(p => p.Id == ProductId).FirstOrDefaultAsync();
         }
 
         public Product GetProductByName(string productName)
         {
-            return _productContext.Products.Where(p => p.productName == productName).FirstOrDefault();
+            return _productContext.Products.Where(p => p.Name == productName).FirstOrDefault();
         }
 
         public async Task<bool> Save()
@@ -52,6 +52,11 @@ namespace ProductWebApi.Services
         {
             _productContext.Update(product);
             return await Save();
+        }
+
+        public async Task<bool> ProductIdExists(int ProductId)
+        {
+            return await _productContext.Products.AnyAsync(c => c.Id == ProductId);
         }
     }
 }

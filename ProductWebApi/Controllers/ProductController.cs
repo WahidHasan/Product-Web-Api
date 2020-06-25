@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProductWebApi.Dtos;
 using ProductWebApi.Models;
 using ProductWebApi.Services;
 
@@ -16,20 +17,43 @@ namespace ProductWebApi.Controllers
     {
         private ProductDbContext _productDbContext;
         private IProductRepository _productRepository;
+        private ICategoryRepository _categoryRepository;
+        private ICountryRepository _countryRepository;
+        private ICheckService _checkService;
 
         public ProductController(ProductDbContext productDbContext,
-            IProductRepository productRepository)
+            IProductRepository productRepository, ICategoryRepository categoryRepository, 
+            ICountryRepository countryRepository, ICheckService checkService)
         {
             _productDbContext = productDbContext;
             _productRepository = productRepository;
+            _categoryRepository = categoryRepository;
+            _countryRepository = countryRepository;
+            _checkService = checkService;
         }
 
-        [HttpGet("{ProductId}", Name ="GetProduct")]
-        public IActionResult GetProduct(int ProductId)
+        [HttpGet("{Id}", Name ="GetProduct")]
+        public async Task <IActionResult> GetProduct(int Id)
         {
             try
             {
-                return Ok( _productRepository.GetProduct(ProductId));
+                if(! await _productRepository.ProductIdExists(Id))
+                {
+                    return NotFound();
+                }
+
+                var product = await _productRepository.GetProduct(Id);
+                var category = _categoryRepository.GetCategory((int)product.CategoryId);
+                var country = _countryRepository.GetCountry((int)product.CountryId);
+                var productDto = new ProductDto()
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Price = product.Price,
+                    CategoryId = category.Id,
+                    CountryId = country.Id
+                };
+                return Ok( productDto);
             }
             catch (Exception E)
             {
@@ -38,12 +62,12 @@ namespace ProductWebApi.Controllers
             }
         }
 
-        [HttpGet("getByName/{productName}")]
-        public IActionResult GetProductByName(string productName)
+        [HttpGet("getByName/{Name}")]
+        public IActionResult GetProductByName(string Name)
         {
             try
             {
-                return Ok(_productRepository.GetProductByName(productName));
+                return Ok(_productRepository.GetProductByName(Name));
             }
             catch (Exception E)
             {
@@ -57,7 +81,24 @@ namespace ProductWebApi.Controllers
         {
             try
             {
-                return Ok(await _productRepository.GetProducts());
+                var products = await _productRepository.GetProducts();
+                var productsDto = new List<ProductDto>();
+                foreach(var product in products)
+                {
+                    var category = _categoryRepository.GetCategory((int)product.CategoryId);
+                    var country = _countryRepository.GetCountry((int)product.CountryId);
+                    productsDto.Add(new ProductDto
+                    {
+                        Id = product.Id,
+                        Name = product.Name,
+                        Price = product.Price,
+                        CategoryId = category.Id,
+                        CountryId = country.Id
+                    });
+                }
+               
+
+                return Ok(productsDto);
             }
             catch (Exception E)
             {
@@ -69,37 +110,44 @@ namespace ProductWebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] Product toCreate)
         {
-            try
-            {
+           /* try
+            { */
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
-                await _productRepository.CreateProduct(toCreate);
+                
+                var tempCategoryId = await _checkService.CategoryIdFetchByName(toCreate);
+                var tempCountryId = await _checkService.CountryIdFetchByName(toCreate);
 
-                /*if (!await _productRepository.CreateProduct(toCreate))
-                {
-                    ModelState.AddModelError("", $"Something went wrong saving data");
-                    return StatusCode(500, ModelState);
-                } */
-                  return CreatedAtRoute("GetProduct", new { ProductId = toCreate.ProductId }, toCreate);
+                toCreate.CategoryId = tempCategoryId;
+                toCreate.CountryId = tempCountryId;
+
+                //Product storeProduct = new Product();
+                bool X =await _productRepository.CreateProduct(toCreate);
+                if (X == true)
+                    return CreatedAtRoute("GetProduct", new Product { Id = toCreate.Id }, toCreate);
+                else
+                    return NotFound();
+
+                //return CreatedAtRoute("GetProduct", new Product{ Id = toCreate.Id }, toCreate);
                 //return CreatedAtRoute("GetProduct",  toCreate, toCreate);
-            }
-            catch (Exception E)
+           // }
+            /*catch (Exception E)
             {
 
                 return StatusCode(500, E.Message);
-            }
+            }*/
         }
 
 
-        [HttpDelete("{ProductId}")]
+        [HttpDelete("{Id}")]
 
         public async Task<IActionResult> DeleteProduct([FromRoute] int ProductId)
         {
-            //var products = await _productDbContext.Products.Where(p => p.ProductId == ProductId).FirstOrDefaultAsync();
+            //var products = await _productDbContext.Products.Where(p => p.Id == Id).FirstOrDefaultAsync();
             var products = await _productDbContext.Products.FindAsync(ProductId);
-            //var products = _productRepository.GetProduct(ProductId);
+            //var products = _productRepository.GetProduct(Id);
             if (products != null)
             {
                 await _productRepository.DeleteProduct(products);
@@ -113,7 +161,7 @@ namespace ProductWebApi.Controllers
 
 
 
-        [HttpPut("{ProductId}")]
+        [HttpPut("{Id}")]
 
         public async Task<IActionResult> UpdateProduct(int ProductId, [FromBody]Product toUpdate)
         {
@@ -122,7 +170,7 @@ namespace ProductWebApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (ProductId != toUpdate.ProductId)
+            if (ProductId != toUpdate.Id)
             {
                 return BadRequest(ModelState);
             }
@@ -132,10 +180,10 @@ namespace ProductWebApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var check = await _productDbContext.Products.FirstOrDefaultAsync(p => p.ProductId.Equals(ProductId));
-            check.ProductId = toUpdate.ProductId;
-            check.productName = toUpdate.productName;
-            check.price = toUpdate.price;
+            var check = await _productDbContext.Products.FirstOrDefaultAsync(p => p.Id.Equals(ProductId));
+            check.Id = toUpdate.Id;
+            check.Name = toUpdate.Name;
+            check.Price = toUpdate.Price;
             check.CountryId = toUpdate.CountryId;
             check.CategoryId = toUpdate.CategoryId;
             await _productRepository.UpdateProduct(check);

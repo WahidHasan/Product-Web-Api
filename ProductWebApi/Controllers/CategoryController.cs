@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProductWebApi.Dtos;
 using ProductWebApi.Models;
 using ProductWebApi.Services;
 
@@ -27,12 +28,18 @@ namespace ProductWebApi.Controllers
         }
 
         //Get Category by Id
-        [HttpGet("{CategoryId}", Name = "GetCategory")]
-        public IActionResult GetCategory(int CategoryId)
+        [HttpGet("{Id}", Name = "GetCategory")]
+        public IActionResult GetCategory(int Id)
         {
             try
             {
-                return Ok(_categoryRepository.GetCategory(CategoryId));
+                var category = _categoryRepository.GetCategory(Id);
+                var categoryDto = new CategoryDto()
+                {
+                    Id = category.Id,
+                    Name = category.Name
+                };
+                return Ok(categoryDto);
             }
             catch (Exception E)
             {
@@ -47,7 +54,32 @@ namespace ProductWebApi.Controllers
         {
             try
             {
-                return Ok(await _categoryRepository.GetCategories());
+                var categories = await _categoryRepository.GetCategories();
+                var categoriesDto = new List<CategoryDto>();
+                foreach (var category in categories)
+                {
+                    categoriesDto.Add(new CategoryDto
+                    {
+                        Id = category.Id,
+                        Name = category.Name
+                    });
+                }
+                return Ok(categoriesDto);
+            }
+            catch (Exception E)
+            {
+
+                return StatusCode(500, E.Message);
+            }
+        }
+
+        //Get Products by Category Id
+        [HttpGet("getProductsByCategoryId/{Id}")]
+        public async Task<IActionResult> GetProductsByCategoryId(int categoryId )
+        {
+            try
+            {
+                return Ok(await _categoryRepository.GetProductsByCategoryId(categoryId));
             }
             catch (Exception E)
             {
@@ -73,7 +105,7 @@ namespace ProductWebApi.Controllers
                     ModelState.AddModelError("", $"Something went wrong saving data");
                     return StatusCode(500, ModelState);
                 } */
-                return CreatedAtRoute("GetCategory", new Category { CategoryId = toCreate.CategoryId }, toCreate);
+                return CreatedAtRoute("GetCategory", new Category { Id = toCreate.Id }, toCreate);
             }
             catch (Exception E)
             {
@@ -83,13 +115,13 @@ namespace ProductWebApi.Controllers
         }
 
         //Delete Category
-        [HttpDelete("{CategoryId}")]
+        [HttpDelete("{Id}")]
 
-        public async Task<IActionResult> DeleteCategory([FromRoute] int CategoryId)
+        public async Task<IActionResult> DeleteCategory([FromRoute] int Id)
         {
-            //var products = await _productDbContext.Products.Where(p => p.ProductId == ProductId).FirstOrDefaultAsync();
-            var categories = await _productDbContext.Categories.FindAsync(CategoryId);
-            //var products = _productRepository.GetProduct(ProductId);
+            //var products = await _productDbContext.Products.Where(p => p.Id == Id).FirstOrDefaultAsync();
+            var categories = await _productDbContext.Categories.FindAsync(Id);
+            //var products = _productRepository.GetProduct(Id);
             if (categories != null)
             {
                 await _categoryRepository.DeleteCategory(categories);
@@ -102,15 +134,15 @@ namespace ProductWebApi.Controllers
         }
 
         //Update Category
-        [HttpPut("{CategoryId}")]
-        public async Task<IActionResult> UpdateCategory(int CategoryId, [FromBody]Category toUpdate)
+        [HttpPut("{Id}")]
+        public async Task<IActionResult> UpdateCategory(int Id, [FromBody]Category toUpdate)
         {
             if (toUpdate == null)
             {
                 return BadRequest(ModelState);
             }
 
-            if (CategoryId != toUpdate.CategoryId)
+            if (Id != toUpdate.Id)
             {
                 return BadRequest(ModelState);
             }
@@ -120,9 +152,9 @@ namespace ProductWebApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var check = await _productDbContext.Categories.FirstOrDefaultAsync(c => c.CategoryId.Equals(CategoryId));
-            check.CategoryId = toUpdate.CategoryId;
-            check.categoryName = toUpdate.categoryName;
+            var check = await _productDbContext.Categories.FirstOrDefaultAsync(c => c.Id.Equals(Id));
+            check.Id = toUpdate.Id;
+            check.Name = toUpdate.Name;
 
             await _categoryRepository.UpdateCategory(check);
 
