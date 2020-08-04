@@ -29,11 +29,15 @@ namespace ProductWebApi.Controllers
 
         //Get Country by Id
         [HttpGet("{Id}", Name = "GetCountry")]
-        public IActionResult GetCountry(int Id)
+        public async Task<IActionResult> GetCountry(int Id)
         {
             try
             {
-                var country = _countryRepository.GetCountry(Id);
+                if (!await _countryRepository.IsCountryIdExists(Id))
+                {
+                    return NotFound();
+                }
+                var country = _countryRepository.Get(Id);
                 var countryDto = new CountryDto()
                 {
                     Id = country.Id,
@@ -50,11 +54,11 @@ namespace ProductWebApi.Controllers
 
         //Get All Countries
         [HttpGet]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> Gets()
         {
             try
             {
-                var countries = await _countryRepository.GetCountries();
+                var countries = await _countryRepository.Gets();
                 var countriesDto = new List<CountryDto>();
                 foreach (var country in countries)
                 {
@@ -73,24 +77,10 @@ namespace ProductWebApi.Controllers
             }
         }
 
-        //Get Products by Country Id
-        [HttpGet("getProductsByCountryId/{Id}")]
-        public async Task<IActionResult> GetProductsByCountryId(int Id)
-        {
-            try
-            {
-                return Ok(await _countryRepository.GetProductsByCountryId(Id));
-            }
-            catch (Exception E)
-            {
-
-                return StatusCode(500, E.Message);
-            }
-        }
 
         //Create new Country
         [HttpPost]
-        public async Task<IActionResult> CreateCountry([FromBody] Country toCreate)
+        public async Task<IActionResult> Create([FromBody] Country toCreate)
         {
             try
             {
@@ -98,9 +88,9 @@ namespace ProductWebApi.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                await _countryRepository.CreateCountry(toCreate);
+                await _countryRepository.Create(toCreate);
 
-                /*if (!await _productRepository.CreateProduct(toCreate))
+                /*if (!await _productRepository.Create(toCreate))
                 {
                     ModelState.AddModelError("", $"Something went wrong saving data");
                     return StatusCode(500, ModelState);
@@ -117,13 +107,13 @@ namespace ProductWebApi.Controllers
         //Delete Country
         [HttpDelete("{Id}")]
 
-        public async Task<IActionResult> DeleteCountry([FromRoute] int Id)
+        public async Task<IActionResult> Delete([FromRoute] int Id)
         {
             var countries = await _productDbContext.Countries.FindAsync(Id);
             
             if (countries != null)
             {
-                await _countryRepository.DeleteCountry(countries);
+                await _countryRepository.Delete(countries);
                 return NoContent();
             }
             else
@@ -134,7 +124,7 @@ namespace ProductWebApi.Controllers
 
         //Update Country
         [HttpPut("{Id}")]
-        public async Task<IActionResult> UpdateCountry(int Id, [FromBody]Country toUpdate)
+        public async Task<IActionResult> Update(int Id, [FromBody]Country toUpdate)
         {
             if (toUpdate == null)
             {
@@ -155,9 +145,9 @@ namespace ProductWebApi.Controllers
             check.Id = toUpdate.Id;
             check.Name = toUpdate.Name;
 
-            await _countryRepository.UpdateCountry(check);
+            await _countryRepository.Update(check);
 
-            /*if (!await _productRepository.UpdateProduct(check))
+            /*if (!await _productRepository.Update(check))
             {
                 ModelState.AddModelError("", $"Something went wrong updating data");
                 return StatusCode(500, ModelState);

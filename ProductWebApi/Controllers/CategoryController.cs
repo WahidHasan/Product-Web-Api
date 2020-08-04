@@ -29,11 +29,15 @@ namespace ProductWebApi.Controllers
 
         //Get Category by Id
         [HttpGet("{Id}", Name = "GetCategory")]
-        public IActionResult GetCategory(int Id)
+        public async Task<IActionResult> GetCategory(int Id)
         {
             try
             {
-                var category = _categoryRepository.GetCategory(Id);
+                if (!await _categoryRepository.IsCategoryIdExists(Id))
+                {
+                    return NotFound();
+                }
+                var category = _categoryRepository.Get(Id);
                 var categoryDto = new CategoryDto()
                 {
                     Id = category.Id,
@@ -50,11 +54,11 @@ namespace ProductWebApi.Controllers
 
         //Get All Categories
         [HttpGet]
-        public async Task<IActionResult> GetCategories()
+        public async Task<IActionResult> Gets()
         {
             try
             {
-                var categories = await _categoryRepository.GetCategories();
+                var categories = await _categoryRepository.Gets();
                 var categoriesDto = new List<CategoryDto>();
                 foreach (var category in categories)
                 {
@@ -73,24 +77,10 @@ namespace ProductWebApi.Controllers
             }
         }
 
-        //Get Products by Category Id
-        [HttpGet("getProductsByCategoryId/{Id}")]
-        public async Task<IActionResult> GetProductsByCategoryId(int categoryId )
-        {
-            try
-            {
-                return Ok(await _categoryRepository.GetProductsByCategoryId(categoryId));
-            }
-            catch (Exception E)
-            {
-
-                return StatusCode(500, E.Message);
-            }
-        }
 
         //Create new Category
         [HttpPost]
-        public async Task<IActionResult> CreateCategory([FromBody] Category toCreate)
+        public async Task<IActionResult> Create([FromBody] Category toCreate)
         {
             try
             {
@@ -98,9 +88,9 @@ namespace ProductWebApi.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                await _categoryRepository.CreateCategory(toCreate);
+                await _categoryRepository.Create(toCreate);
 
-                /*if (!await _productRepository.CreateProduct(toCreate))
+                /*if (!await _productRepository.Create(toCreate))
                 {
                     ModelState.AddModelError("", $"Something went wrong saving data");
                     return StatusCode(500, ModelState);
@@ -117,14 +107,14 @@ namespace ProductWebApi.Controllers
         //Delete Category
         [HttpDelete("{Id}")]
 
-        public async Task<IActionResult> DeleteCategory([FromRoute] int Id)
+        public async Task<IActionResult> Delete([FromRoute] int Id)
         {
             //var products = await _productDbContext.Products.Where(p => p.Id == Id).FirstOrDefaultAsync();
             var categories = await _productDbContext.Categories.FindAsync(Id);
-            //var products = _productRepository.GetProduct(Id);
+            //var products = _productRepository.Get(Id);
             if (categories != null)
             {
-                await _categoryRepository.DeleteCategory(categories);
+                await _categoryRepository.Delete(categories);
                 return NoContent();
             }
             else
@@ -135,7 +125,7 @@ namespace ProductWebApi.Controllers
 
         //Update Category
         [HttpPut("{Id}")]
-        public async Task<IActionResult> UpdateCategory(int Id, [FromBody]Category toUpdate)
+        public async Task<IActionResult> Update(int Id, [FromBody]Category toUpdate)
         {
             if (toUpdate == null)
             {
@@ -156,9 +146,9 @@ namespace ProductWebApi.Controllers
             check.Id = toUpdate.Id;
             check.Name = toUpdate.Name;
 
-            await _categoryRepository.UpdateCategory(check);
+            await _categoryRepository.Update(check);
 
-            /*if (!await _productRepository.UpdateProduct(check))
+            /*if (!await _productRepository.Update(check))
             {
                 ModelState.AddModelError("", $"Something went wrong updating data");
                 return StatusCode(500, ModelState);

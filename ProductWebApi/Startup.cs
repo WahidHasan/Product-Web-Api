@@ -35,7 +35,7 @@ namespace ProductWebApi
             services.AddTransient<IProductRepository, ProductRepository>();
             services.AddTransient<ICategoryRepository, CategoryRepository>();
             services.AddTransient<ICountryRepository, CountryRepository>();
-            services.AddTransient<ICheckService, CheckService>();
+            //services.AddTransient<ICheckService, CheckService>();
 
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
